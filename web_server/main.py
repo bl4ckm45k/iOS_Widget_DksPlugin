@@ -74,16 +74,13 @@ if __name__ == "__main__":
                                        auth_token=config.server.ngrok_auth_token),
                          )
 
-        # ngrok.set_auth_token(config.server.ngrok_auth_token)
-        # Get the dev server port (defaults to 8000 for Uvicorn, can be overridden with `--port`
-        # when starting the server
-        port = config.server.port
-
         # Open a ngrok tunnel to the dev server
         try:
             ng_connect = ngrok.connect(settings.BASE_URL)
-            print(ng_connect)
+            print(f'\n\nYOU NGROK TUNNEL:\n\n{ng_connect}\n\n')
             logger.info(f"ngrok tunnel {ng_connect.public_url} -> {settings.BASE_URL}")
         except PyngrokNgrokError:
             pass
-    uvicorn.run(f"{__name__}:app", host="127.0.0.1", port=config.server.port, log_level="info", workers=1, reload=True)
+
+    # If u don't use exe file u can change switch reload to "True"
+    uvicorn.run(f"{__name__}:app", host="127.0.0.1", port=config.server.port, log_level="info", workers=1, reload=False)
