@@ -54,17 +54,12 @@ async def dks(request: Request):
 
 @app.get("/do_widget")
 async def widget(current_user: Annotated[User, Depends(get_current_active_user)]):
-    data = []
-    for key in await redis_cli.keys('darkbot:*'):
-        redis_data = json.loads(await redis_cli.get(key))
-        data.append(redis_data)
-    return data
+    return [json.loads(await redis_cli.get(key)) for key in await redis_cli.keys('darkbot:*')]
 
 
 if __name__ == "__main__":
     if settings.USE_NGROK:
         import os
-        # pyngrok should only ever be installed or initialized in a dev environment when this flag is set
         from pyngrok import conf, ngrok
         from pyngrok.exception import PyngrokNgrokError
 
@@ -82,5 +77,5 @@ if __name__ == "__main__":
         except PyngrokNgrokError:
             pass
 
-    # If u don't use exe file u can change switch reload to "True"
+    # If u don't use exe file u can switch reload to "True"
     uvicorn.run(f"{__name__}:app", host="127.0.0.1", port=config.server.port, log_level="info", workers=1, reload=False)
