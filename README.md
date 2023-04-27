@@ -1,4 +1,4 @@
-### ### A simple web server for Cs Plugin DarkBot and a widget script for the Scriptable application.
+### A simple web server for DksPlugin DarkBot and a widget script for the Scriptable application.
 #### Why?
 DksPlugin itself has no authentication and transmits game session data (server and SID).
 
