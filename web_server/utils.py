@@ -19,25 +19,29 @@ def check_map(map_name: str) -> bool:
     return True
 
 
+def check_uri_alert(hero_id: int, logs: str):
+    current_time = datetime.datetime.now()
+    for log in logs:
+        str_log_time = log[1:20]
+        date_object = datetime.datetime.strptime(str_log_time, '%Y-%m-%d %H:%M:%S')
+        days, hours, minutes, seconds = timedelta_to_dhms(current_time - date_object)
+        if any(x > 0 for x in [days, hours, minutes]):
+            break
+        info = log[22:].strip()
+        if 'URI!' in info:
+            _, amount_uri = info.replace(' URI!', '').strip().split()
+            amount_uri = int(amount_uri.replace('.', ''))
+            if amount_uri % 2 != 0 and amount_uri < 5000:
+                await redis_cli.set(f'uri_alert:{hero_id}', '1', ex=300)
+                return True
+    return False
+
+
 async def process_data(dictionary: dict) -> dict:
     uri_alert = False if await redis_cli.get(f'uri_alert:{dictionary["hero"]["id"]}') is None else True
     if check_map(dictionary['map']['name']):
-        if len(dictionary['plugin']['liveLogs']['lastStdLogs']) > 0:
-            current_time = datetime.datetime.now()
-            for info in dictionary['plugin']['liveLogs']['lastStdLogs']:
-                str_log_time = info[1:20]
-                date_object = datetime.datetime.strptime(str_log_time, '%Y-%m-%d %H:%M:%S')
-                days, hours, minutes, seconds = timedelta_to_dhms(current_time - date_object)
-                if any(x > 0 for x in [days, hours, minutes]):
-                    break
-                info = info[22:].strip()
-                if 'URI!' in info:
-                    _, amount_uri = info.replace(' URI!', '').strip().split()
-                    amount_uri = int(amount_uri.replace('.', ''))
-                    if amount_uri % 2 != 0 and amount_uri < 5000:
-                        if not uri_alert:
-                            uri_alert = True
-                            await redis_cli.set(f'uri_alert:{dictionary["hero"]["id"]}', '1', ex=300)
+        if len(dictionary['plugin']['liveLogs']['lastStdLogs']) > 0 and not uri_alert:
+            uri_alert = check_uri_alert(dictionary["hero"]["id"], dictionary['plugin']['liveLogs']['lastStdLogs'])
     new_data = {
         "hero": {
             "username": dictionary["hero"]["username"]
